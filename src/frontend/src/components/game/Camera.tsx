@@ -13,6 +13,7 @@ export function CameraController({
 }) {
   const { camera } = useThree();
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const mouseStartRef = useRef<{ x: number; y: number } | null>(null);
   const cameraAngleRef = useRef({ yaw: 0, pitch: 0.3 });
   const lastInteractRef = useRef(0);
 
@@ -25,7 +26,6 @@ export function CameraController({
   // Touch camera drag
   useEffect(() => {
     const onTouchStart = (e: TouchEvent) => {
-      // Only if not on joystick or attack button
       const target = e.target as Element;
       if (target.closest(".joystick-zone") || target.closest(".attack-button"))
         return;
@@ -68,19 +68,52 @@ export function CameraController({
     };
   }, []);
 
+  // Mouse drag camera control (desktop)
+  useEffect(() => {
+    const onMouseDown = (e: MouseEvent) => {
+      if (e.button !== 0) return; // left button only
+      mouseStartRef.current = { x: e.clientX, y: e.clientY };
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!mouseStartRef.current) return;
+      const dx = e.clientX - mouseStartRef.current.x;
+      const dy = e.clientY - mouseStartRef.current.y;
+      cameraAngleRef.current.yaw -= dx * 0.005;
+      cameraAngleRef.current.pitch = Math.max(
+        0.1,
+        Math.min(1.0, cameraAngleRef.current.pitch + dy * 0.005),
+      );
+      mouseStartRef.current = { x: e.clientX, y: e.clientY };
+      lastInteractRef.current = Date.now();
+    };
+
+    const onMouseUp = () => {
+      mouseStartRef.current = null;
+    };
+
+    window.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+
+    return () => {
+      window.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, []);
+
   useFrame((_, delta) => {
     const { playerPosition } = useGameStore.getState();
 
-    // Auto-rotate when user hasn't interacted recently (2s grace period)
     const timeSinceInteract = (Date.now() - lastInteractRef.current) / 1000;
     if (timeSinceInteract > 2) {
       cameraAngleRef.current.yaw += AUTO_ROTATE_SPEED * delta;
     }
 
-    // Compute camera position based on angle offset
     const yaw = cameraAngleRef.current.yaw;
     const pitch = cameraAngleRef.current.pitch;
-    const dist = 12;
+    const dist = 16;
 
     const offsetX = Math.sin(yaw) * Math.cos(pitch) * dist;
     const offsetY = Math.sin(pitch) * dist;

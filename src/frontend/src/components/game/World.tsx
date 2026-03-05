@@ -1,29 +1,57 @@
 import { Sky } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useGameStore } from "./gameStore";
 
-// Ground plane with grass/dirt look
+// Deterministic pseudo-random from position hash
+function posHash(x: number, z: number): number {
+  const s = Math.sin(x * 127.1 + z * 311.7) * 43758.5453;
+  return s - Math.floor(s);
+}
+
+// Ground plane with rolling hills via vertex displacement
 function Ground() {
-  const groundMat = useMemo(() => {
-    const mat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(0x4a7a2a),
-      roughness: 0.9,
-      metalness: 0.0,
-    });
-    return mat;
+  const geoRef = useRef<THREE.BufferGeometry>(null);
+
+  useEffect(() => {
+    const geo = geoRef.current;
+    if (!geo) return;
+    const pos = geo.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i);
+      const z = pos.getZ(i);
+      const y =
+        Math.sin(x * 0.04) * Math.cos(z * 0.035) * 1.4 +
+        Math.sin(x * 0.09 + z * 0.06) * 0.7 +
+        Math.cos(x * 0.055 - z * 0.08) * 0.5;
+      pos.setY(i, y);
+    }
+    pos.needsUpdate = true;
+    geo.computeVertexNormals();
   }, []);
+
+  const mat = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: new THREE.Color(0x4a7a2a),
+        roughness: 0.95,
+        metalness: 0.0,
+      }),
+    [],
+  );
 
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow position={[0, 0, 0]}>
-      <planeGeometry args={[400, 400]} />
-      <primitive object={groundMat} attach="material" />
+      <planeGeometry ref={geoRef} args={[400, 400, 80, 80]} />
+      <primitive object={mat} attach="material" />
     </mesh>
   );
 }
 
-// Building mesh
+// Wall color palette for buildings
+const WALL_COLORS = [0x8a7560, 0x7a6550, 0x9a8570, 0x6a5540];
+
 function Building({
   position,
   size,
@@ -33,30 +61,89 @@ function Building({
   size: [number, number, number];
   rotation?: number;
 }) {
+  const colorIndex =
+    Math.floor(
+      Math.abs(posHash(position[0], position[2]) * WALL_COLORS.length),
+    ) % WALL_COLORS.length;
+
   const wallMat = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: new THREE.Color(0x8a7560),
+        color: new THREE.Color(WALL_COLORS[colorIndex]),
         roughness: 0.85,
         metalness: 0.05,
+      }),
+    [colorIndex],
+  );
+
+  const roofMat = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: new THREE.Color(0x4a3520),
+        roughness: 0.9,
+        metalness: 0.02,
       }),
     [],
   );
 
+  const windowMat = useMemo(
+    () =>
+      new THREE.MeshStandardMaterial({
+        color: new THREE.Color(0x1a2a3a),
+        roughness: 0.4,
+        metalness: 0.3,
+      }),
+    [],
+  );
+
+  const roofY = position[1] + size[1] / 2 + 0.08;
+  const roofThickness = 0.16;
+
+  // Place 1–2 windows on front face
+  const numWindows = size[0] >= 6 ? 2 : 1;
+  const winW = Math.min(1.2, size[0] * 0.25);
+  const winH = Math.min(1.4, size[1] * 0.3);
+  const winDepth = 0.06;
+  const winY = position[1] + size[1] * 0.1;
+  const winZ = position[2] - size[2] / 2 - 0.01;
+
   return (
-    <mesh
-      position={position}
-      rotation={[0, rotation, 0]}
-      castShadow
-      receiveShadow
-    >
-      <boxGeometry args={size} />
-      <primitive object={wallMat} attach="material" />
-    </mesh>
+    <group rotation={[0, rotation, 0]}>
+      {/* Main wall body */}
+      <mesh position={position} castShadow receiveShadow>
+        <boxGeometry args={size} />
+        <primitive object={wallMat} attach="material" />
+      </mesh>
+
+      {/* Roof cap */}
+      <mesh
+        position={[position[0], roofY, position[2]]}
+        castShadow
+        receiveShadow
+      >
+        <boxGeometry args={[size[0] + 0.4, roofThickness, size[2] + 0.4]} />
+        <primitive object={roofMat} attach="material" />
+      </mesh>
+
+      {/* Windows */}
+      {Array.from({ length: numWindows }).map((_, wi) => {
+        const offsetX =
+          numWindows === 1
+            ? position[0]
+            : position[0] + (wi === 0 ? -size[0] * 0.22 : size[0] * 0.22);
+        const wKey = `win-${position[0]}-${position[2]}-${wi}`;
+        return (
+          <mesh key={wKey} position={[offsetX, winY, winZ]} castShadow={false}>
+            <boxGeometry args={[winW, winH, winDepth]} />
+            <primitive object={windowMat} attach="material" />
+          </mesh>
+        );
+      })}
+    </group>
   );
 }
 
-// Tree with foliage
+// Tree with multi-layer pine foliage
 function Tree({
   position,
   size,
@@ -82,25 +169,39 @@ function Tree({
     [],
   );
 
+  const trunkH = size[1];
+  const trunkR = size[0] * 0.8;
+
   return (
     <group position={position}>
       {/* Trunk */}
       <mesh castShadow>
-        <cylinderGeometry
-          args={[size[0] / 2, (size[2] / 2) * 1.4, size[1], 5]}
-        />
+        <cylinderGeometry args={[trunkR * 0.5, trunkR * 0.7, trunkH, 6]} />
         <primitive object={treeMat} attach="material" />
       </mesh>
-      {/* Foliage cone */}
-      <mesh position={[0, size[1] * 0.7, 0]} castShadow>
-        <coneGeometry args={[size[0] * 2.5, size[1] * 1.2, 7]} />
+
+      {/* Foliage layer 1 - bottom (widest) */}
+      <mesh position={[0, trunkH * 0.5, 0]} castShadow>
+        <coneGeometry args={[size[0] * 3.0, trunkH * 0.7, 7]} />
+        <primitive object={foliageMat} attach="material" />
+      </mesh>
+
+      {/* Foliage layer 2 - middle */}
+      <mesh position={[0, trunkH * 0.8, 0]} castShadow>
+        <coneGeometry args={[size[0] * 2.3, trunkH * 0.6, 7]} />
+        <primitive object={foliageMat} attach="material" />
+      </mesh>
+
+      {/* Foliage layer 3 - top (narrowest) */}
+      <mesh position={[0, trunkH * 1.1, 0]} castShadow>
+        <coneGeometry args={[size[0] * 1.5, trunkH * 0.5, 7]} />
         <primitive object={foliageMat} attach="material" />
       </mesh>
     </group>
   );
 }
 
-// Rock boulder
+// Rock boulder with organic scale variation
 function Rock({
   position,
   size,
@@ -118,8 +219,19 @@ function Rock({
     [],
   );
 
+  const h = posHash(position[0], position[2]);
+  const h2 = posHash(position[0] + 1, position[2] - 1);
+  const scaleX = 0.8 + h * 0.6;
+  const scaleY = 0.6 + h2 * 0.5;
+  const scaleZ = 0.75 + (1 - h) * 0.55;
+
   return (
-    <mesh position={position} castShadow receiveShadow>
+    <mesh
+      position={position}
+      scale={[scaleX, scaleY, scaleZ]}
+      castShadow
+      receiveShadow
+    >
       <icosahedronGeometry args={[size[0] / 2, 1]} />
       <primitive object={rockMat} attach="material" />
     </mesh>
@@ -179,7 +291,6 @@ function CampfireLight({
         distance={12}
         castShadow={false}
       />
-      {/* Ember glow sphere */}
       <mesh position={position}>
         <sphereGeometry args={[0.3, 8, 8]} />
         <meshStandardMaterial
@@ -205,41 +316,52 @@ export function World() {
 
   return (
     <>
-      {/* Fog - light blue daytime haze */}
-      <fog attach="fog" args={[0x87ceeb, 60, 180]} />
+      {/* Atmospheric fog - light sky blue haze */}
+      <fog attach="fog" args={[0xc8dff0, 80, 220]} />
 
-      {/* Daytime Sky */}
+      {/* Dramatic lower-angle daytime sky */}
       <Sky
         distance={450000}
-        sunPosition={[100, 20, -100]}
-        inclination={0.6}
-        azimuth={0.25}
+        sunPosition={[50, 15, -80]}
+        inclination={0.52}
+        azimuth={0.22}
       />
 
-      {/* Daytime Lighting */}
-      <ambientLight color={0xfff5e0} intensity={0.7} />
-      {/* Sun directional light */}
+      {/* Cooler ambient light */}
+      <ambientLight color={0xd0e8ff} intensity={0.5} />
+
+      {/* Sun directional light - stronger, softer shadows */}
       <directionalLight
         color={0xfff8d0}
-        intensity={2.2}
+        intensity={3.5}
         position={[100, 80, -100]}
         castShadow
-        shadow-mapSize={[1024, 1024]}
-        shadow-camera-far={200}
-        shadow-camera-left={-100}
-        shadow-camera-right={100}
-        shadow-camera-top={100}
-        shadow-camera-bottom={-100}
+        shadow-mapSize={[2048, 2048]}
+        shadow-camera-far={250}
+        shadow-camera-left={-120}
+        shadow-camera-right={120}
+        shadow-camera-top={120}
+        shadow-camera-bottom={-120}
+        shadow-bias={-0.0005}
       />
-      {/* Fill light from the sky */}
-      <hemisphereLight args={[0x87ceeb, 0x4a7a2a, 0.5]} />
 
-      {/* Campfire lights (dimmer in daytime) */}
+      {/* Warm secondary fill light */}
+      <directionalLight
+        color={0xffe8c0}
+        intensity={0.6}
+        position={[-80, 40, 80]}
+        castShadow={false}
+      />
+
+      {/* Sky hemisphere */}
+      <hemisphereLight args={[0x87ceeb, 0x4a7a2a, 0.4]} />
+
+      {/* Campfire lights */}
       {campfirePositions.map((pos) => (
         <CampfireLight key={`fire-${pos[0]}-${pos[2]}`} position={pos} />
       ))}
 
-      {/* Ground */}
+      {/* Ground with rolling hills */}
       <Ground />
 
       {/* Environment objects */}

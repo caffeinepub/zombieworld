@@ -1,6 +1,6 @@
 import { Canvas } from "@react-three/fiber";
 import { AnimatePresence } from "motion/react";
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { CameraController } from "./Camera";
 import { GameOverScreen } from "./GameOverScreen";
@@ -13,6 +13,102 @@ import { World } from "./World";
 import { ZombieSystem } from "./Zombies";
 import { useGameStore } from "./gameStore";
 import { generateWorld } from "./worldGen";
+
+function isMobileDevice(): boolean {
+  return window.innerWidth <= 768 || /Mobi|Android/i.test(navigator.userAgent);
+}
+
+function PortraitWarning() {
+  const [isPortrait, setIsPortrait] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(isMobileDevice());
+
+    const mq = window.matchMedia("(orientation: portrait)");
+    setIsPortrait(mq.matches);
+
+    const handler = (e: MediaQueryListEvent) => setIsPortrait(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  if (!isMobile || !isPortrait) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        background: "rgba(0,0,0,0.92)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "1.5rem",
+        padding: "2rem",
+      }}
+    >
+      {/* Rotate icon */}
+      <svg
+        width="80"
+        height="80"
+        viewBox="0 0 80 80"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        role="img"
+        aria-label="Rotate device to landscape"
+        style={{ color: "#ffffff" }}
+      >
+        {/* Phone outline in portrait */}
+        <rect
+          x="22"
+          y="8"
+          width="36"
+          height="60"
+          rx="5"
+          stroke="white"
+          strokeWidth="3"
+          fill="none"
+          opacity="0.5"
+        />
+        {/* Arrow indicating rotation */}
+        <path
+          d="M 66 28 A 30 30 0 0 1 28 66"
+          stroke="white"
+          strokeWidth="3"
+          fill="none"
+          strokeLinecap="round"
+        />
+        <polygon points="24,60 22,70 32,68" fill="white" />
+      </svg>
+
+      <div
+        style={{
+          color: "#ffffff",
+          fontSize: "1.6rem",
+          fontWeight: 700,
+          textAlign: "center",
+          letterSpacing: "0.02em",
+        }}
+      >
+        Rotate your device
+      </div>
+      <div
+        style={{
+          color: "rgba(255,255,255,0.65)",
+          fontSize: "1rem",
+          textAlign: "center",
+          maxWidth: "260px",
+          lineHeight: 1.5,
+        }}
+      >
+        This game is best in landscape mode
+      </div>
+    </div>
+  );
+}
 
 function GameScene({
   cameraRef,
@@ -52,6 +148,7 @@ export function Game() {
     >
       {/* 3D Canvas - always rendered */}
       <Canvas
+        data-ocid="game.canvas_target"
         shadows
         gl={{
           antialias: true,
@@ -61,8 +158,8 @@ export function Game() {
         camera={{
           fov: 65,
           near: 0.1,
-          far: 200,
-          position: [0, 5, 12],
+          far: 250,
+          position: [0, 5, 16],
         }}
         style={{ width: "100%", height: "100%" }}
         onCreated={({ gl }) => {
@@ -77,8 +174,17 @@ export function Game() {
         </Suspense>
       </Canvas>
 
-      {/* Scanlines overlay for gritty feel */}
-      <div className="fixed inset-0 pointer-events-none z-5 scanlines" />
+      {/* Subtle vignette overlay */}
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          pointerEvents: "none",
+          zIndex: 5,
+          background:
+            "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.45) 100%)",
+        }}
+      />
 
       {/* HUD - only during play/pause */}
       {(gameState === "playing" || gameState === "paused") && <HUD />}
@@ -92,6 +198,9 @@ export function Game() {
         {gameState === "gameover" && <GameOverScreen key="gameover" />}
         {gameState === "paused" && <PauseScreen key="paused" />}
       </AnimatePresence>
+
+      {/* Portrait mode warning for mobile */}
+      <PortraitWarning />
     </div>
   );
 }
