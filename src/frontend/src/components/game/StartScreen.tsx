@@ -1,6 +1,10 @@
 import { motion } from "motion/react";
 import { useState } from "react";
-import { useLeaderboard } from "../../hooks/useQueries";
+import {
+  useLeaderboard,
+  useRecordPlayerJoin,
+  useTotalPlayersJoined,
+} from "../../hooks/useQueries";
 import { useGameStore } from "./gameStore";
 
 function LeaderboardPanel({ onClose }: { onClose: () => void }) {
@@ -137,8 +141,13 @@ function LeaderboardPanel({ onClose }: { onClose: () => void }) {
 export function StartScreen() {
   const { setGameState, playerName, setPlayerName, resetGame } = useGameStore();
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showGoogleNote, setShowGoogleNote] = useState(false);
+  const { data: totalPlayers, isLoading: isLoadingPlayers } =
+    useTotalPlayersJoined();
+  const recordPlayerJoin = useRecordPlayerJoin();
 
   const handleStart = () => {
+    recordPlayerJoin.mutate();
     resetGame();
     setGameState("playing");
   };
@@ -223,6 +232,38 @@ export function StartScreen() {
         >
           Save humanity. Kill them all.
         </motion.p>
+
+        {/* Players Joined Counter */}
+        <motion.div
+          data-ocid="game.players_joined.panel"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55 }}
+          className="flex flex-col items-center gap-1 mb-6 py-3 rounded-sm"
+          style={{
+            background: "oklch(0.07 0.01 25)",
+            border: "1px solid oklch(0.52 0.22 22 / 0.2)",
+          }}
+        >
+          <div
+            className="text-[10px] tracking-[0.4em] uppercase"
+            style={{ color: "oklch(0.48 0.03 50)" }}
+          >
+            SURVIVORS JOINED
+          </div>
+          <div
+            className="game-font font-black text-4xl leading-none tabular-nums"
+            style={{
+              color: "oklch(0.72 0.22 22)",
+              textShadow:
+                "0 0 20px oklch(0.52 0.22 22 / 0.7), 0 0 50px oklch(0.52 0.22 22 / 0.3)",
+            }}
+          >
+            {isLoadingPlayers || totalPlayers === undefined
+              ? "---"
+              : Number(totalPlayers).toLocaleString()}
+          </div>
+        </motion.div>
 
         {/* Divider */}
         <div className="flex items-center gap-3 mb-6">
@@ -344,6 +385,77 @@ export function StartScreen() {
           >
             🏆 LEADERBOARD
           </button>
+
+          {/* Google Connect Button */}
+          <button
+            type="button"
+            data-ocid="game.google_connect_button"
+            onClick={() => setShowGoogleNote((prev) => !prev)}
+            className="w-full py-3 rounded-sm font-medium text-sm tracking-wide flex items-center justify-center gap-3 transition-all duration-200"
+            style={{
+              background: "oklch(0.97 0.005 60)",
+              border: "1px solid oklch(0.82 0.01 60)",
+              color: "oklch(0.25 0.01 60)",
+              boxShadow: "0 1px 3px oklch(0 0 0 / 0.12)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background =
+                "oklch(0.92 0.008 60)";
+              (e.currentTarget as HTMLElement).style.boxShadow =
+                "0 2px 6px oklch(0 0 0 / 0.15)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background =
+                "oklch(0.97 0.005 60)";
+              (e.currentTarget as HTMLElement).style.boxShadow =
+                "0 1px 3px oklch(0 0 0 / 0.12)";
+            }}
+          >
+            {/* Google "G" SVG */}
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 18 18"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"
+                fill="#4285F4"
+              />
+              <path
+                d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"
+                fill="#34A853"
+              />
+              <path
+                d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z"
+                fill="#FBBC05"
+              />
+              <path
+                d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"
+                fill="#EA4335"
+              />
+            </svg>
+            Connect with Google
+          </button>
+
+          {/* Google note */}
+          {showGoogleNote && (
+            <motion.div
+              data-ocid="game.google_connect.error_state"
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              className="w-full px-4 py-2.5 rounded-sm text-xs text-center"
+              style={{
+                background: "oklch(0.14 0.02 50)",
+                border: "1px solid oklch(0.3 0.05 50 / 0.5)",
+                color: "oklch(0.72 0.06 50)",
+              }}
+            >
+              Google login isn't available — just enter your name above to play!
+            </motion.div>
+          )}
         </motion.div>
 
         {/* Footer */}

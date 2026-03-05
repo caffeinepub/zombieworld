@@ -19,6 +19,8 @@ export const HighScore = IDL.Record({
 export const idlService = IDL.Service({
   'getBestScore' : IDL.Func([], [HighScore], ['query']),
   'getGlobalLeaderboard' : IDL.Func([IDL.Nat], [IDL.Vec(HighScore)], ['query']),
+  'getTotalPlayersJoined' : IDL.Func([], [IDL.Nat], ['query']),
+  'recordPlayerJoin' : IDL.Func([], [IDL.Nat], []),
   'submitScore' : IDL.Func([IDL.Text, IDL.Nat], [], []),
 });
 
@@ -40,6 +42,8 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(HighScore)],
         ['query'],
       ),
+    'getTotalPlayersJoined' : IDL.Func([], [IDL.Nat], ['query']),
+    'recordPlayerJoin' : IDL.Func([], [IDL.Nat], []),
     'submitScore' : IDL.Func([IDL.Text, IDL.Nat], [], []),
   });
 };

@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useGameStore } from "./gameStore";
 
 export function MobileControls() {
@@ -15,6 +15,9 @@ export function MobileControls() {
   const thumbRef = useRef<HTMLDivElement>(null);
   const joystickCenter = useRef({ x: 0, y: 0 });
   const activeTouchId = useRef<number | null>(null);
+  const isDraggingMouse = useRef(false);
+
+  // ── Touch handlers ──────────────────────────────────────────────────────────
 
   const handleJoystickStart = useCallback((e: React.TouchEvent) => {
     const touch = e.changedTouches[0];
@@ -69,6 +72,62 @@ export function MobileControls() {
     [setJoystickDelta],
   );
 
+  // ── Mouse handlers ───────────────────────────────────────────────────────────
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    isDraggingMouse.current = true;
+    const rect = joystickRef.current?.getBoundingClientRect();
+    if (rect) {
+      joystickCenter.current = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+      };
+    }
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingMouse.current) return;
+
+      const dx = e.clientX - joystickCenter.current.x;
+      const dy = e.clientY - joystickCenter.current.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const maxDist = 40;
+      const clampedDist = Math.min(dist, maxDist);
+      const angle = Math.atan2(dy, dx);
+
+      const normX = (clampedDist / maxDist) * Math.cos(angle);
+      const normY = (clampedDist / maxDist) * Math.sin(angle);
+
+      setJoystickDelta({ x: normX, y: normY });
+
+      if (thumbRef.current) {
+        thumbRef.current.style.transform = `translate(calc(-50% + ${normX * maxDist}px), calc(-50% + ${normY * maxDist}px))`;
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (!isDraggingMouse.current) return;
+      isDraggingMouse.current = false;
+      setJoystickDelta({ x: 0, y: 0 });
+      if (thumbRef.current) {
+        thumbRef.current.style.transform = "translate(-50%, -50%)";
+      }
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [setJoystickDelta]);
+
+  // ── Attack ───────────────────────────────────────────────────────────────────
+
   const handleAttack = useCallback(() => {
     const now = performance.now() / 1000;
     const state = useGameStore.getState();
@@ -96,22 +155,26 @@ export function MobileControls() {
 
   return (
     <>
-      {/* Virtual Joystick */}
+      {/* Virtual Joystick — visible on all screen sizes */}
       <div
         ref={joystickRef}
-        className="joystick-zone fixed z-50 md:hidden"
+        className="joystick-zone fixed z-50"
         onTouchStart={handleJoystickStart}
         onTouchMove={handleJoystickMove}
         onTouchEnd={handleJoystickEnd}
         onTouchCancel={handleJoystickEnd}
+        onMouseDown={handleMouseDown}
+        data-ocid="game.canvas_target"
       >
+        {/* Inner ring for desktop visual polish */}
+        <div className="joystick-inner-ring" />
         <div ref={thumbRef} className="joystick-thumb" />
       </div>
 
-      {/* Attack Button */}
+      {/* Attack Button — visible on all screen sizes */}
       <button
         type="button"
-        className="attack-button fixed bottom-20 right-6 z-50 md:hidden w-20 h-20 rounded-full flex items-center justify-center font-bold text-sm tracking-widest uppercase"
+        className="attack-button fixed bottom-20 right-6 z-50 w-20 h-20 rounded-full flex items-center justify-center font-bold text-sm tracking-widest uppercase"
         style={{
           background: isAttacking
             ? "oklch(0.65 0.22 22)"
@@ -124,11 +187,14 @@ export function MobileControls() {
             : "0 0 10px oklch(0.52 0.22 22 / 0.3)",
           transform: isAttacking ? "scale(0.95)" : "scale(1)",
           transition: "all 0.15s ease",
+          cursor: "pointer",
         }}
         onTouchStart={(e) => {
           e.preventDefault();
           handleAttack();
         }}
+        onClick={handleAttack}
+        data-ocid="game.primary_button"
       >
         ⚔
       </button>

@@ -99,6 +99,8 @@ export type Time = bigint;
 export interface backendInterface {
     getBestScore(): Promise<HighScore>;
     getGlobalLeaderboard(limit: bigint): Promise<Array<HighScore>>;
+    getTotalPlayersJoined(): Promise<bigint>;
+    recordPlayerJoin(): Promise<bigint>;
     submitScore(name: string, score: bigint): Promise<void>;
 }
 export class Backend implements backendInterface {
@@ -128,6 +130,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getGlobalLeaderboard(arg0);
+            return result;
+        }
+    }
+    async getTotalPlayersJoined(): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getTotalPlayersJoined();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getTotalPlayersJoined();
+            return result;
+        }
+    }
+    async recordPlayerJoin(): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.recordPlayerJoin();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.recordPlayerJoin();
             return result;
         }
     }

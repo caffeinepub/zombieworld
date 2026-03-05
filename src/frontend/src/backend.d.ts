@@ -17,5 +17,7 @@ export type Time = bigint;
 export interface backendInterface {
     getBestScore(): Promise<HighScore>;
     getGlobalLeaderboard(limit: bigint): Promise<Array<HighScore>>;
+    getTotalPlayersJoined(): Promise<bigint>;
+    recordPlayerJoin(): Promise<bigint>;
     submitScore(name: string, score: bigint): Promise<void>;
 }

@@ -176,18 +176,35 @@
   );
 }
 
-/* Touch joystick */
+/* Joystick — fixed position controlled by Tailwind (bottom-20 left-6) */
 .joystick-zone {
-  position: absolute;
   bottom: 80px;
-  left: 20px;
+  left: 24px;
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: oklch(0.08 0.005 25 / 0.6);
-  border: 2px solid oklch(0.52 0.22 22 / 0.5);
+  background: oklch(0.08 0.005 25 / 0.65);
+  border: 2px solid oklch(0.52 0.22 22 / 0.55);
+  box-shadow:
+    0 0 16px oklch(0.52 0.22 22 / 0.2),
+    inset 0 0 12px oklch(0.08 0.005 25 / 0.4);
   touch-action: none;
   user-select: none;
+  cursor: grab;
+  backdrop-filter: blur(4px);
+}
+
+.joystick-zone:active {
+  cursor: grabbing;
+}
+
+/* Subtle inner ring for desktop polish */
+.joystick-inner-ring {
+  position: absolute;
+  inset: 12px;
+  border-radius: 50%;
+  border: 1px solid oklch(0.52 0.22 22 / 0.25);
+  pointer-events: none;
 }
 
 .joystick-thumb {
@@ -195,12 +212,19 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: oklch(0.52 0.22 22 / 0.8);
-  border: 2px solid oklch(0.7 0.22 22);
+  background: radial-gradient(
+    circle at 35% 35%,
+    oklch(0.65 0.22 22 / 0.95),
+    oklch(0.45 0.22 22 / 0.9)
+  );
+  border: 2px solid oklch(0.72 0.22 22);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
+  box-shadow:
+    0 2px 8px oklch(0.08 0.005 25 / 0.6),
+    0 0 12px oklch(0.52 0.22 22 / 0.35);
 }
 
 /* Custom scrollbar for leaderboard */

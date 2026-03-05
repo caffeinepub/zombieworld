@@ -2,8 +2,12 @@ import Time "mo:core/Time";
 import Array "mo:core/Array";
 import Order "mo:core/Order";
 import Map "mo:core/Map";
+import Nat "mo:core/Nat";
 import Principal "mo:core/Principal";
+import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
+
+
 
 actor {
   type HighScore = {
@@ -28,6 +32,7 @@ actor {
   };
 
   let profiles = Map.empty<Principal, Profile>();
+  var totalPlayersJoined = 0;
 
   public shared ({ caller }) func submitScore(name : Text, score : Nat) : async () {
     if (score <= 0) { Runtime.trap("Score must be positive") };
@@ -59,6 +64,15 @@ actor {
         };
       };
     };
+  };
+
+  public shared ({ caller }) func recordPlayerJoin() : async Nat {
+    totalPlayersJoined += 1;
+    totalPlayersJoined;
+  };
+
+  public query ({ caller }) func getTotalPlayersJoined() : async Nat {
+    totalPlayersJoined;
   };
 
   public query ({ caller }) func getBestScore() : async HighScore {

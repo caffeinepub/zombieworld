@@ -8,10 +8,18 @@ export type GameState =
   | "gameover"
   | "leaderboard";
 
+export type WeaponType = "fists" | "rifle" | "shotgun";
+
+export type ZombieType = "walker" | "runner" | "tank";
+
 export interface ZombieData {
   id: string;
+  zombieType: ZombieType;
   position: THREE.Vector3;
   health: number;
+  maxHealth: number;
+  speedMultiplier: number;
+  damage: number;
   state: "idle" | "chase" | "attack";
   wanderTarget: THREE.Vector3;
   lastHitTime: number;
@@ -26,6 +34,12 @@ export interface EnvObject {
   position: [number, number, number];
   size: [number, number, number];
   rotation?: number;
+}
+
+export interface WeaponPickup {
+  id: string;
+  type: "rifle" | "shotgun";
+  position: [number, number, number];
 }
 
 interface GameStore {
@@ -76,6 +90,23 @@ interface GameStore {
   // Environment
   envObjects: EnvObject[];
   setEnvObjects: (objs: EnvObject[]) => void;
+
+  // Weapons
+  currentWeapon: WeaponType;
+  rifleAmmo: number;
+  shotgunAmmo: number;
+  setCurrentWeapon: (w: WeaponType) => void;
+  setRifleAmmo: (n: number) => void;
+  setShotgunAmmo: (n: number) => void;
+
+  // Weapon pickups
+  weaponPickups: WeaponPickup[];
+  setWeaponPickups: (pickups: WeaponPickup[]) => void;
+  removeWeaponPickup: (id: string) => void;
+
+  // Day/night
+  dayTime: number; // 0..1, 0=midnight, 0.5=noon
+  setDayTime: (t: number) => void;
 
   // Reset
   resetGame: () => void;
@@ -134,6 +165,26 @@ export const useGameStore = create<GameStore>((set, get) => ({
   envObjects: [],
   setEnvObjects: (objs) => set({ envObjects: objs }),
 
+  // Weapons
+  currentWeapon: "fists",
+  rifleAmmo: 0,
+  shotgunAmmo: 0,
+  setCurrentWeapon: (w) => set({ currentWeapon: w }),
+  setRifleAmmo: (n) => set({ rifleAmmo: Math.max(0, n) }),
+  setShotgunAmmo: (n) => set({ shotgunAmmo: Math.max(0, n) }),
+
+  // Weapon pickups
+  weaponPickups: [],
+  setWeaponPickups: (pickups) => set({ weaponPickups: pickups }),
+  removeWeaponPickup: (id) =>
+    set((state) => ({
+      weaponPickups: state.weaponPickups.filter((p) => p.id !== id),
+    })),
+
+  // Day/night - start at early morning (~0.3)
+  dayTime: 0.3,
+  setDayTime: (t) => set({ dayTime: t }),
+
   resetGame: () =>
     set({
       playerHealth: 100,
@@ -148,5 +199,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       playerPosition: new THREE.Vector3(0, 1, 0),
       keys: new Set(),
       joystickDelta: { x: 0, y: 0 },
+      currentWeapon: "fists",
+      rifleAmmo: 0,
+      shotgunAmmo: 0,
+      // weaponPickups and dayTime persist between rounds
     }),
 }));

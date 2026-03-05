@@ -2,6 +2,33 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { HighScore } from "../backend.d";
 import { useActor } from "./useActor";
 
+export function useTotalPlayersJoined() {
+  const { actor, isFetching } = useActor();
+  return useQuery<bigint>({
+    queryKey: ["totalPlayersJoined"],
+    queryFn: async () => {
+      if (!actor) return 0n;
+      return actor.getTotalPlayersJoined();
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 10000,
+  });
+}
+
+export function useRecordPlayerJoin() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error("No actor");
+      return actor.recordPlayerJoin();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["totalPlayersJoined"] });
+    },
+  });
+}
+
 export function useLeaderboard(limit = 10n) {
   const { actor, isFetching } = useActor();
   return useQuery<HighScore[]>({

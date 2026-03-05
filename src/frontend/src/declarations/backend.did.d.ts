@@ -20,6 +20,8 @@ export type Time = bigint;
 export interface _SERVICE {
   'getBestScore' : ActorMethod<[], HighScore>,
   'getGlobalLeaderboard' : ActorMethod<[bigint], Array<HighScore>>,
+  'getTotalPlayersJoined' : ActorMethod<[], bigint>,
+  'recordPlayerJoin' : ActorMethod<[], bigint>,
   'submitScore' : ActorMethod<[string, bigint], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
