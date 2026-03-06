@@ -69,3 +69,45 @@ export function useSubmitScore() {
     },
   });
 }
+
+export function useActivePlayers() {
+  const { actor, isFetching } = useActor();
+  return useQuery<bigint>({
+    queryKey: ["activePlayers"],
+    queryFn: async () => {
+      if (!actor) return 0n;
+      return actor.getActivePlayers();
+    },
+    enabled: !!actor && !isFetching,
+    refetchInterval: 15000,
+    staleTime: 10000,
+  });
+}
+
+export function useRecordActivePlayer() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error("No actor");
+      return actor.recordActivePlayer();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["activePlayers"] });
+    },
+  });
+}
+
+export function useRecordPlayerLeave() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error("No actor");
+      return actor.recordPlayerLeave();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["activePlayers"] });
+    },
+  });
+}

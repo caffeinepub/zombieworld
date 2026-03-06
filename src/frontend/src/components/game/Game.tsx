@@ -2,6 +2,10 @@ import { Canvas } from "@react-three/fiber";
 import { AnimatePresence } from "motion/react";
 import { Suspense, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import {
+  useRecordActivePlayer,
+  useRecordPlayerLeave,
+} from "../../hooks/useQueries";
 import { CameraController } from "./Camera";
 import { GameOverScreen } from "./GameOverScreen";
 import { HUD } from "./HUD";
@@ -134,12 +138,44 @@ function GameScene({
 export function Game() {
   const { gameState, setEnvObjects } = useGameStore();
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const { mutate: recordActivePlayer } = useRecordActivePlayer();
+  const { mutate: recordPlayerLeave } = useRecordPlayerLeave();
+  const prevGameStateRef = useRef<string | null>(null);
 
   // Generate world once
   useEffect(() => {
     const objects = generateWorld();
     setEnvObjects(objects);
   }, [setEnvObjects]);
+
+  // Track active players on game state transitions
+  useEffect(() => {
+    const prev = prevGameStateRef.current;
+    prevGameStateRef.current = gameState;
+
+    if (gameState === "playing" && prev !== "playing") {
+      recordActivePlayer();
+    } else if (
+      (gameState === "gameover" || gameState === "start") &&
+      prev === "playing"
+    ) {
+      recordPlayerLeave();
+    }
+  }, [gameState, recordActivePlayer, recordPlayerLeave]);
+
+  // Decrement count on unmount (tab close / navigation away)
+  useEffect(() => {
+    const handleUnload = () => {
+      recordPlayerLeave();
+    };
+    window.addEventListener("beforeunload", handleUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+      if (prevGameStateRef.current === "playing") {
+        recordPlayerLeave();
+      }
+    };
+  }, [recordPlayerLeave]);
 
   return (
     <div

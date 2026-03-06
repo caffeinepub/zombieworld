@@ -131,40 +131,56 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
         ref={groupRef}
         position={[zombie.position.x, zombie.position.y, zombie.position.z]}
       >
-        {/* Torso — torn shirt */}
+        {/* Floating marker arrow above zombie */}
+        <mesh position={[0, 2.4, 0]}>
+          <coneGeometry args={[0.18, 0.4, 6]} />
+          <meshBasicMaterial color="#00ff44" />
+        </mesh>
+        <pointLight
+          color={0x00ff44}
+          intensity={1.5}
+          distance={6}
+          position={[0, 1.2, 0]}
+        />
+        {/* Torso — bright torn shirt */}
         <mesh castShadow position={[0, 0.1, 0]}>
           <boxGeometry args={[0.65, 0.7, 0.32]} />
           <meshStandardMaterial
-            color="#3a3020"
-            roughness={0.95}
-            emissive="#100a00"
-            emissiveIntensity={0.25}
+            color="#7dba4a"
+            roughness={0.7}
+            emissive="#336622"
+            emissiveIntensity={0.6}
           />
         </mesh>
         {/* Torn shirt overlay — upper layer for texture depth */}
         <mesh castShadow position={[0, 0.35, 0.01]}>
           <boxGeometry args={[0.68, 0.38, 0.33]} />
           <meshStandardMaterial
-            color="#2a2215"
-            roughness={0.98}
-            emissive="#0a0805"
-            emissiveIntensity={0.2}
+            color="#5a9932"
+            roughness={0.8}
+            emissive="#224411"
+            emissiveIntensity={0.4}
           />
         </mesh>
         {/* Pelvis/hips — dirty pants */}
         <mesh castShadow position={[0, -0.28, 0]}>
           <boxGeometry args={[0.55, 0.22, 0.28]} />
-          <meshStandardMaterial color="#2a2218" roughness={0.95} />
+          <meshStandardMaterial color="#4a6630" roughness={0.85} />
         </mesh>
         {/* Neck */}
         <mesh castShadow position={[0, 0.62, 0]}>
           <cylinderGeometry args={[0.08, 0.09, 0.15, 6]} />
-          <meshStandardMaterial color="#4a5535" roughness={0.9} />
+          <meshStandardMaterial color="#7abf60" roughness={0.8} />
         </mesh>
-        {/* Head — sickly green-grey */}
+        {/* Head — bright sickly green */}
         <mesh ref={headRef} castShadow position={[0, 0.85, 0]}>
           <sphereGeometry args={[0.22, 12, 10]} />
-          <meshStandardMaterial color="#5a6b4a" roughness={0.9} />
+          <meshStandardMaterial
+            color="#88cc55"
+            roughness={0.7}
+            emissive="#336622"
+            emissiveIntensity={0.5}
+          />
         </mesh>
         {/* Glowing green eyes */}
         <mesh position={[0.1, 0.9, 0.2]}>
@@ -172,7 +188,7 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
           <meshStandardMaterial
             color="#00ff44"
             emissive="#00ff44"
-            emissiveIntensity={isChasing ? 4 : 1.5}
+            emissiveIntensity={isChasing ? 6 : 3}
           />
         </mesh>
         <mesh position={[-0.1, 0.9, 0.2]}>
@@ -180,17 +196,15 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
           <meshStandardMaterial
             color="#00ff44"
             emissive="#00ff44"
-            emissiveIntensity={isChasing ? 4 : 1.5}
+            emissiveIntensity={isChasing ? 6 : 3}
           />
         </mesh>
-        {isChasing && (
-          <pointLight
-            color={0x00ff44}
-            intensity={0.8}
-            distance={4}
-            position={[0, 0.9, 0.3]}
-          />
-        )}
+        <pointLight
+          color={0x00ff44}
+          intensity={isChasing ? 2 : 1}
+          distance={5}
+          position={[0, 0.9, 0.3]}
+        />
         {/* Left upper arm */}
         <mesh
           castShadow
@@ -198,7 +212,7 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
           rotation={[isChasing ? -0.5 : 0, 0, 0.3]}
         >
           <capsuleGeometry args={[0.09, 0.28, 4, 6]} />
-          <meshStandardMaterial color="#3a3020" roughness={0.92} />
+          <meshStandardMaterial color="#6aaa44" roughness={0.75} />
         </mesh>
         {/* Left lower arm */}
         <mesh
@@ -207,7 +221,7 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
           rotation={[isChasing ? -0.6 : 0, 0, 0.15]}
         >
           <capsuleGeometry args={[0.07, 0.24, 4, 6]} />
-          <meshStandardMaterial color="#4a5535" roughness={0.92} />
+          <meshStandardMaterial color="#7abf55" roughness={0.75} />
         </mesh>
         {/* Right upper arm */}
         <mesh
@@ -216,7 +230,7 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
           rotation={[isChasing ? -1.0 : 0, 0, -0.3]}
         >
           <capsuleGeometry args={[0.09, 0.28, 4, 6]} />
-          <meshStandardMaterial color="#3a3020" roughness={0.92} />
+          <meshStandardMaterial color="#6aaa44" roughness={0.75} />
         </mesh>
         {/* Right lower arm */}
         <mesh
@@ -225,27 +239,27 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
           rotation={[isChasing ? -1.1 : 0, 0, -0.15]}
         >
           <capsuleGeometry args={[0.07, 0.24, 4, 6]} />
-          <meshStandardMaterial color="#4a5535" roughness={0.92} />
+          <meshStandardMaterial color="#7abf55" roughness={0.75} />
         </mesh>
         {/* Right thigh */}
         <mesh castShadow position={[0.15, -0.55, 0]}>
           <capsuleGeometry args={[0.11, 0.28, 4, 6]} />
-          <meshStandardMaterial color="#2a2218" roughness={0.92} />
+          <meshStandardMaterial color="#4a7730" roughness={0.8} />
         </mesh>
         {/* Right lower leg */}
         <mesh castShadow position={[0.15, -0.88, 0]}>
           <capsuleGeometry args={[0.09, 0.28, 4, 6]} />
-          <meshStandardMaterial color="#2a2218" roughness={0.92} />
+          <meshStandardMaterial color="#4a7730" roughness={0.8} />
         </mesh>
         {/* Left thigh */}
         <mesh castShadow position={[-0.15, -0.55, 0]}>
           <capsuleGeometry args={[0.11, 0.28, 4, 6]} />
-          <meshStandardMaterial color="#2a2218" roughness={0.92} />
+          <meshStandardMaterial color="#4a7730" roughness={0.8} />
         </mesh>
         {/* Left lower leg */}
         <mesh castShadow position={[-0.15, -0.88, 0]}>
           <capsuleGeometry args={[0.09, 0.28, 4, 6]} />
-          <meshStandardMaterial color="#2a2218" roughness={0.92} />
+          <meshStandardMaterial color="#4a7730" roughness={0.8} />
         </mesh>
         {/* Health bar */}
         {!zombie.isDying && zombie.health < zombie.maxHealth && (
@@ -271,7 +285,18 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
         ref={groupRef}
         position={[zombie.position.x, zombie.position.y, zombie.position.z]}
       >
-        {/* Elongated torso — torn grey rags, hunched */}
+        {/* Floating marker arrow — red for runner */}
+        <mesh position={[0, 2.1, 0]}>
+          <coneGeometry args={[0.15, 0.35, 6]} />
+          <meshBasicMaterial color="#ff2222" />
+        </mesh>
+        <pointLight
+          color={0xff2200}
+          intensity={1.5}
+          distance={5}
+          position={[0, 1.0, 0]}
+        />
+        {/* Elongated torso — bright red rags, hunched */}
         <mesh
           castShadow
           position={[0, 0.05, 0]}
@@ -279,26 +304,31 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
         >
           <boxGeometry args={[0.35, 0.8, 0.22]} />
           <meshStandardMaterial
-            color="#252520"
-            roughness={0.95}
-            emissive="#0d0d0a"
-            emissiveIntensity={0.3}
+            color="#cc3322"
+            roughness={0.7}
+            emissive="#661111"
+            emissiveIntensity={0.5}
           />
         </mesh>
         {/* Pelvis */}
         <mesh castShadow position={[0, -0.35, 0]}>
           <boxGeometry args={[0.3, 0.18, 0.2]} />
-          <meshStandardMaterial color="#1e1e18" roughness={0.95} />
+          <meshStandardMaterial color="#992211" roughness={0.8} />
         </mesh>
         {/* Neck — gaunt */}
         <mesh castShadow position={[0, 0.6, 0]}>
           <cylinderGeometry args={[0.055, 0.065, 0.12, 6]} />
-          <meshStandardMaterial color="#4a3530" roughness={0.9} />
+          <meshStandardMaterial color="#cc4433" roughness={0.8} />
         </mesh>
-        {/* Head — smaller, gaunt */}
+        {/* Head — gaunt reddish */}
         <mesh ref={headRef} castShadow position={[0, 0.83, 0]}>
           <sphereGeometry args={[0.17, 10, 8]} />
-          <meshStandardMaterial color="#4a3530" roughness={0.9} />
+          <meshStandardMaterial
+            color="#dd4444"
+            roughness={0.7}
+            emissive="#661111"
+            emissiveIntensity={0.4}
+          />
         </mesh>
         {/* Red eyes */}
         <mesh position={[0.08, 0.88, 0.15]}>
@@ -306,7 +336,7 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
           <meshStandardMaterial
             color="#ff1111"
             emissive="#ff0000"
-            emissiveIntensity={isChasing ? 5 : 2}
+            emissiveIntensity={isChasing ? 8 : 4}
           />
         </mesh>
         <mesh position={[-0.08, 0.88, 0.15]}>
@@ -314,17 +344,15 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
           <meshStandardMaterial
             color="#ff1111"
             emissive="#ff0000"
-            emissiveIntensity={isChasing ? 5 : 2}
+            emissiveIntensity={isChasing ? 8 : 4}
           />
         </mesh>
-        {isChasing && (
-          <pointLight
-            color={0xff2200}
-            intensity={1.0}
-            distance={4}
-            position={[0, 0.88, 0.2]}
-          />
-        )}
+        <pointLight
+          color={0xff2200}
+          intensity={isChasing ? 2 : 1}
+          distance={4}
+          position={[0, 0.88, 0.2]}
+        />
         {/* Right thin upper arm — angled forward when chasing */}
         <mesh
           castShadow
@@ -332,7 +360,7 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
           rotation={[isChasing ? -0.9 : 0, 0, -0.25]}
         >
           <capsuleGeometry args={[0.06, 0.3, 4, 6]} />
-          <meshStandardMaterial color="#252520" roughness={0.92} />
+          <meshStandardMaterial color="#cc3322" roughness={0.75} />
         </mesh>
         {/* Right thin lower arm */}
         <mesh
@@ -341,7 +369,7 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
           rotation={[isChasing ? -0.7 : 0, 0, -0.15]}
         >
           <capsuleGeometry args={[0.045, 0.28, 4, 6]} />
-          <meshStandardMaterial color="#3a2820" roughness={0.92} />
+          <meshStandardMaterial color="#bb2211" roughness={0.78} />
         </mesh>
         {/* Left thin upper arm */}
         <mesh
@@ -350,7 +378,7 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
           rotation={[isChasing ? -0.9 : 0, 0, 0.25]}
         >
           <capsuleGeometry args={[0.06, 0.3, 4, 6]} />
-          <meshStandardMaterial color="#252520" roughness={0.92} />
+          <meshStandardMaterial color="#cc3322" roughness={0.75} />
         </mesh>
         {/* Left thin lower arm */}
         <mesh
@@ -359,27 +387,27 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
           rotation={[isChasing ? -0.7 : 0, 0, 0.15]}
         >
           <capsuleGeometry args={[0.045, 0.28, 4, 6]} />
-          <meshStandardMaterial color="#3a2820" roughness={0.92} />
+          <meshStandardMaterial color="#bb2211" roughness={0.78} />
         </mesh>
         {/* Right thin thigh */}
         <mesh castShadow position={[0.1, -0.52, 0]}>
           <capsuleGeometry args={[0.07, 0.3, 4, 6]} />
-          <meshStandardMaterial color="#1e1e18" roughness={0.92} />
+          <meshStandardMaterial color="#992211" roughness={0.8} />
         </mesh>
         {/* Right thin lower leg */}
         <mesh castShadow position={[0.1, -0.85, 0]}>
           <capsuleGeometry args={[0.055, 0.3, 4, 6]} />
-          <meshStandardMaterial color="#1e1e18" roughness={0.92} />
+          <meshStandardMaterial color="#992211" roughness={0.8} />
         </mesh>
         {/* Left thin thigh */}
         <mesh castShadow position={[-0.1, -0.52, 0]}>
           <capsuleGeometry args={[0.07, 0.3, 4, 6]} />
-          <meshStandardMaterial color="#1e1e18" roughness={0.92} />
+          <meshStandardMaterial color="#992211" roughness={0.8} />
         </mesh>
         {/* Left thin lower leg */}
         <mesh castShadow position={[-0.1, -0.85, 0]}>
           <capsuleGeometry args={[0.055, 0.3, 4, 6]} />
-          <meshStandardMaterial color="#1e1e18" roughness={0.92} />
+          <meshStandardMaterial color="#992211" roughness={0.8} />
         </mesh>
         {/* Health bar */}
         {!zombie.isDying && zombie.health < zombie.maxHealth && (
@@ -404,72 +432,84 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
       ref={groupRef}
       position={[zombie.position.x, zombie.position.y, zombie.position.z]}
     >
-      {/* Massive bloated torso */}
+      {/* Floating marker arrow — orange for tank */}
+      <mesh position={[0, 3.2, 0]}>
+        <coneGeometry args={[0.25, 0.5, 6]} />
+        <meshBasicMaterial color="#ff8800" />
+      </mesh>
+      <pointLight
+        color={0xff8800}
+        intensity={2}
+        distance={8}
+        position={[0, 1.8, 0]}
+      />
+      {/* Massive bloated torso — bright orange-brown */}
       <mesh castShadow position={[0, 0.2, 0]}>
         <boxGeometry args={[1.3, 1.7, 0.75]} />
         <meshStandardMaterial
-          color="#2e1800"
-          roughness={0.95}
-          emissive="#140a00"
-          emissiveIntensity={0.3}
+          color="#cc5500"
+          roughness={0.7}
+          emissive="#662200"
+          emissiveIntensity={0.5}
         />
       </mesh>
       {/* Belly bulge — protruding gut */}
       <mesh castShadow position={[0, -0.1, 0.42]}>
         <sphereGeometry args={[0.5, 10, 8]} />
         <meshStandardMaterial
-          color="#261400"
-          roughness={0.98}
-          emissive="#100800"
-          emissiveIntensity={0.25}
+          color="#bb4400"
+          roughness={0.75}
+          emissive="#551a00"
+          emissiveIntensity={0.4}
         />
       </mesh>
       {/* Armor plate — front chest */}
       <mesh castShadow position={[0, 0.5, 0.4]}>
         <boxGeometry args={[1.1, 0.85, 0.1]} />
-        <meshStandardMaterial
-          color="#1a1a1a"
-          roughness={0.65}
-          metalness={0.55}
-        />
+        <meshStandardMaterial color="#555555" roughness={0.5} metalness={0.7} />
       </mesh>
       {/* Armor plate — left side */}
       <mesh castShadow position={[0.7, 0.3, 0]}>
         <boxGeometry args={[0.1, 0.9, 0.55]} />
         <meshStandardMaterial
-          color="#161616"
-          roughness={0.65}
-          metalness={0.5}
+          color="#444444"
+          roughness={0.5}
+          metalness={0.65}
         />
       </mesh>
       {/* Armor plate — right side */}
       <mesh castShadow position={[-0.7, 0.3, 0]}>
         <boxGeometry args={[0.1, 0.9, 0.55]} />
         <meshStandardMaterial
-          color="#161616"
-          roughness={0.65}
-          metalness={0.5}
+          color="#444444"
+          roughness={0.5}
+          metalness={0.65}
         />
       </mesh>
       {/* Pelvis / hips — massive */}
       <mesh castShadow position={[0, -0.75, 0]}>
         <boxGeometry args={[1.1, 0.28, 0.65]} />
-        <meshStandardMaterial color="#241200" roughness={0.95} />
+        <meshStandardMaterial color="#994400" roughness={0.8} />
       </mesh>
       {/* Neck — thick */}
       <mesh castShadow position={[0, 1.15, 0]}>
         <cylinderGeometry args={[0.18, 0.22, 0.25, 8]} />
-        <meshStandardMaterial color="#2e1800" roughness={0.9} />
+        <meshStandardMaterial color="#cc5500" roughness={0.8} />
       </mesh>
       {/* Large lumpy head */}
       <mesh ref={headRef} castShadow position={[0, 1.45, 0]}>
         <boxGeometry args={[0.75, 0.65, 0.62]} />
-        <meshStandardMaterial color="#2e1800" roughness={0.9} />
+        <meshStandardMaterial
+          color="#cc5500"
+          roughness={0.75}
+          emissive="#662200"
+          emissiveIntensity={0.4}
+        />
       </mesh>
       {/* Forehead bump */}
       <mesh castShadow position={[0, 1.62, 0.25]}>
         <sphereGeometry args={[0.22, 8, 6]} />
-        <meshStandardMaterial color="#281500" roughness={0.95} />
+        <meshStandardMaterial color="#bb4400" roughness={0.8} />
       </mesh>
       {/* Orange eyes */}
       <mesh position={[0.2, 1.48, 0.32]}>
@@ -477,7 +517,7 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
         <meshStandardMaterial
           color="#ff8800"
           emissive="#ff6600"
-          emissiveIntensity={isChasing ? 5 : 2}
+          emissiveIntensity={isChasing ? 8 : 4}
         />
       </mesh>
       <mesh position={[-0.2, 1.48, 0.32]}>
@@ -485,26 +525,24 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
         <meshStandardMaterial
           color="#ff8800"
           emissive="#ff6600"
-          emissiveIntensity={isChasing ? 5 : 2}
+          emissiveIntensity={isChasing ? 8 : 4}
         />
       </mesh>
-      {isChasing && (
-        <pointLight
-          color={0xff8800}
-          intensity={1.5}
-          distance={6}
-          position={[0, 1.45, 0.35]}
-        />
-      )}
+      <pointLight
+        color={0xff8800}
+        intensity={isChasing ? 3 : 1.5}
+        distance={7}
+        position={[0, 1.45, 0.35]}
+      />
       {/* Left thick upper arm */}
       <mesh castShadow position={[-1.0, 0.2, 0]} rotation={[0, 0, 0.45]}>
         <capsuleGeometry args={[0.2, 0.45, 4, 8]} />
-        <meshStandardMaterial color="#2e1800" roughness={0.92} />
+        <meshStandardMaterial color="#cc5500" roughness={0.75} />
       </mesh>
       {/* Left thick lower arm */}
       <mesh castShadow position={[-1.1, -0.25, 0]} rotation={[0, 0, 0.2]}>
         <capsuleGeometry args={[0.16, 0.38, 4, 8]} />
-        <meshStandardMaterial color="#3a2200" roughness={0.92} />
+        <meshStandardMaterial color="#bb4400" roughness={0.78} />
       </mesh>
       {/* Right thick upper arm */}
       <mesh
@@ -513,7 +551,7 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
         rotation={[isChasing ? -0.9 : 0, 0, -0.45]}
       >
         <capsuleGeometry args={[0.2, 0.45, 4, 8]} />
-        <meshStandardMaterial color="#2e1800" roughness={0.92} />
+        <meshStandardMaterial color="#cc5500" roughness={0.75} />
       </mesh>
       {/* Right thick lower arm */}
       <mesh
@@ -522,27 +560,27 @@ function ZombieMesh({ zombie }: { zombie: ZombieData }) {
         rotation={[isChasing ? -0.8 : 0, 0, -0.2]}
       >
         <capsuleGeometry args={[0.16, 0.38, 4, 8]} />
-        <meshStandardMaterial color="#3a2200" roughness={0.92} />
+        <meshStandardMaterial color="#bb4400" roughness={0.78} />
       </mesh>
       {/* Right thick thigh */}
       <mesh castShadow position={[0.28, -0.85, 0]}>
         <capsuleGeometry args={[0.18, 0.4, 4, 8]} />
-        <meshStandardMaterial color="#1e1000" roughness={0.92} />
+        <meshStandardMaterial color="#993300" roughness={0.8} />
       </mesh>
       {/* Right lower leg */}
       <mesh castShadow position={[0.28, -1.3, 0]}>
         <capsuleGeometry args={[0.14, 0.38, 4, 8]} />
-        <meshStandardMaterial color="#1e1000" roughness={0.92} />
+        <meshStandardMaterial color="#993300" roughness={0.8} />
       </mesh>
       {/* Left thick thigh */}
       <mesh castShadow position={[-0.28, -0.85, 0]}>
         <capsuleGeometry args={[0.18, 0.4, 4, 8]} />
-        <meshStandardMaterial color="#1e1000" roughness={0.92} />
+        <meshStandardMaterial color="#993300" roughness={0.8} />
       </mesh>
       {/* Left lower leg */}
       <mesh castShadow position={[-0.28, -1.3, 0]}>
         <capsuleGeometry args={[0.14, 0.38, 4, 8]} />
-        <meshStandardMaterial color="#1e1000" roughness={0.92} />
+        <meshStandardMaterial color="#993300" roughness={0.8} />
       </mesh>
       {/* Wide health bar */}
       {!zombie.isDying && (

@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { useActivePlayers } from "../../hooks/useQueries";
 import { useGameStore } from "./gameStore";
 
 function getDayLabel(dayTime: number): { label: string; icon: string } {
@@ -64,6 +65,8 @@ export function HUD() {
 
   const { label: dayLabel, icon: dayIcon } = getDayLabel(dayTime);
   const isNight = dayTime < 0.2 || dayTime > 0.8;
+
+  const { data: activePlayers } = useActivePlayers();
 
   return (
     <>
@@ -255,6 +258,30 @@ export function HUD() {
           }}
         >
           {score.toString().padStart(6, "0")}
+        </div>
+      </div>
+
+      {/* Playing Now - Bottom Left */}
+      <div
+        data-ocid="hud.active_players.panel"
+        className="fixed bottom-4 left-4 z-30 hud-panel rounded px-3 py-2 text-center"
+      >
+        <div
+          className="text-[10px] tracking-widest uppercase mb-0.5"
+          style={{ color: "oklch(0.58 0.03 50)" }}
+        >
+          PLAYING NOW
+        </div>
+        <div
+          className="text-base font-bold game-font leading-none"
+          style={{
+            color: "oklch(0.75 0.22 22)",
+            textShadow: "0 0 12px oklch(0.52 0.22 22 / 0.7)",
+          }}
+        >
+          {activePlayers !== undefined
+            ? Number(activePlayers).toLocaleString()
+            : "—"}
         </div>
       </div>
 
